@@ -85,3 +85,6 @@ GET http://localhost:8080/api/delivery-fee?city=Pärnu&vehicleType=Car
 ```
 ./gradlew test
 ```
+
+## CREATED BY
+Marleen Rohtla
