@@ -1,5 +1,6 @@
 package com.fujitsu.delivery.controller;
 
+import com.fujitsu.delivery.dto.DeliveryFeeResponse;
 import com.fujitsu.delivery.service.DeliveryFeeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,16 +25,19 @@ public class DeliveryFeeController {
      */
 
     @GetMapping
-    public ResponseEntity<String> getDeliveryFee(
+    public ResponseEntity<DeliveryFeeResponse> getDeliveryFee(
             @RequestParam String city,
             @RequestParam String vehicleType) {
         try{
             //calculates the fee using the service
             double fee = deliveryFeeService.calculateFee(city, vehicleType);
-            return ResponseEntity.ok("Delivery fee: " + fee + " €");
+
+            //returns 200 OK with the fee in the response body
+            return ResponseEntity.ok(new DeliveryFeeResponse(fee));
+
         } catch (RuntimeException e) {
-            //returns error message if vehicle is forbidden or city/vehicle is unknown
-            return ResponseEntity.badRequest().body(e.getMessage());
+            //returns 400 Bad Request with error message if vehicle is forbidden or city/vehicle is unknown
+            return ResponseEntity.badRequest().body(new DeliveryFeeResponse(e.getMessage()));
         }
 
     }

@@ -1,4 +1,13 @@
 package com.fujitsu.delivery.controller;
 
-public class DeliveryFeeControllerTest {
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class DeliveryFeeControllerTest {
+
+    @Test
+    void contextLoads (){
+
+    }
 }

@@ -1,16 +1,16 @@
 package com.fujitsu.delivery.service;
 
 import com.fujitsu.delivery.entity.WeatherObservation;
-import com.fujitsu.delivery.repository.WeatherObservationRepository;
+import com.fujitsu.delivery.exception.ForbiddenVehicleException;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DeliveryFeeService {
 
-    private final WeatherObservationRepository repository;
+    private final WeatherService weatherService;
 
-    public DeliveryFeeService(WeatherObservationRepository repository) {
-        this.repository = repository;
+    public DeliveryFeeService(WeatherService weatherService) {
+        this.weatherService = weatherService;
     }
 
     /**
@@ -26,9 +26,7 @@ public class DeliveryFeeService {
          String stationName = getStationName(city);
 
          //get the latest weather data for that station
-         WeatherObservation weather = repository
-                 .findTopByStationNameOrderByTimestampDesc(stationName)
-                 .orElseThrow(() -> new RuntimeException("No weather data found for " + city));
+         WeatherObservation weather = weatherService.getLatestWeather(stationName);
 
          //calculates all fee components
          double rbf = calculateRBF(city, vehicleType);
@@ -107,7 +105,7 @@ public class DeliveryFeeService {
 
         // wind stronger than 20 m/s is too dangerous for a bike - throws error
         if (windSpeed > 20)
-            throw new RuntimeException("Usage of selected vehicle type is forbidden");
+            throw new ForbiddenVehicleException();
         // wind between 10 and 20 m/s - add 0.5€ extra fee
         if (windSpeed >= 10)
             return 0.5;
@@ -130,7 +128,7 @@ public class DeliveryFeeService {
         // if weather is glaze, hail or thunder - it is too dangerous for scooter or bike
         // if any of these are true, throw an error
         if (p.contains("glaze") || p.contains("hail") || p.contains("thunder"))
-            throw new RuntimeException("Usage of selected vehicle type is forbidden");
+            throw new ForbiddenVehicleException();
 
         // if weather contains snow or sleet - add 1€ extra fee
         if (p.contains("snow") || p.contains("sleet"))
