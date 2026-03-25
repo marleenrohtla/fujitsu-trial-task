@@ -55,6 +55,32 @@ Available at `http://localhost:8080/h2-console`
 - Username: `SA`
 - Password: (empty)
 
+## Testing the API manually
+
+Since weather data is imported automatically every hour, you can insert test data manually in the H2 console to test the API immediately.
+
+Go to `http://localhost:8080/h2-console` and run these SQL inserts:
+```sql
+-- Tallinn
+INSERT INTO WEATHER_OBSERVATION (STATION_NAME, WMO_CODE, AIR_TEMPERATURE, WIND_SPEED, WEATHER_PHENOMENON, TIMESTAMP)
+VALUES ('Tallinn-Harku', '26038', -5.0, 8.0, 'Light snow shower', CURRENT_TIMESTAMP);
+
+-- Tartu
+INSERT INTO WEATHER_OBSERVATION (STATION_NAME, WMO_CODE, AIR_TEMPERATURE, WIND_SPEED, WEATHER_PHENOMENON, TIMESTAMP)
+VALUES ('Tartu-Tõravere', '26242', -2.1, 4.7, 'Light snow shower', CURRENT_TIMESTAMP);
+
+-- Pärnu
+INSERT INTO WEATHER_OBSERVATION (STATION_NAME, WMO_CODE, AIR_TEMPERATURE, WIND_SPEED, WEATHER_PHENOMENON, TIMESTAMP)
+VALUES ('Pärnu', '41803', 0.5, 5.0, 'Clear', CURRENT_TIMESTAMP);
+```
+
+Then test in Postman:
+```
+GET http://localhost:8080/api/delivery-fee?city=Tallinn&vehicleType=Bike
+GET http://localhost:8080/api/delivery-fee?city=Tartu&vehicleType=Scooter
+GET http://localhost:8080/api/delivery-fee?city=Pärnu&vehicleType=Car
+```
+
 ## Running tests
 ```
 ./gradlew test
