@@ -74,15 +74,19 @@ public class DeliveryFeeService {
      */
     private BigDecimal calculateAirTemperatureExtraFee(VehicleType vehicleType, BigDecimal temperature) {
         //applies only to scooter and bike
-        if (temperature == null)
+        if (temperature == null) {
             return BigDecimal.ZERO;
-        if (vehicleType == vehicleType.CAR)
+        }
+        if (vehicleType == vehicleType.CAR) {
             return BigDecimal.ZERO;
+        }
 
-        if (temperature.compareTo(new BigDecimal("-10")) < 0)
+        if (temperature.compareTo(new BigDecimal("-10")) < 0) {
             return new BigDecimal("1.0"); //below -10 then ATEF 1€
-        if (temperature.compareTo(BigDecimal.ZERO) <= 0)
+        }
+        if (temperature.compareTo(BigDecimal.ZERO) <= 0) {
             return new BigDecimal("0.5"); //between -10 and 0 then ATEF 0.5€
+        }
         return BigDecimal.ZERO; //above 0 then ATEF 0€
     }
 
@@ -91,17 +95,21 @@ public class DeliveryFeeService {
      */
     private BigDecimal calculateWindSpeedExtraFee(VehicleType vehicleType, BigDecimal windSpeed) {
         //applies only to bikes, if not a bike return 0
-        if (windSpeed == null)
+        if (windSpeed == null) {
             return BigDecimal.ZERO;
-        if (vehicleType != VehicleType.BIKE)
+        }
+        if (vehicleType != VehicleType.BIKE) {
             return BigDecimal.ZERO;
+        }
 
         // wind stronger than 20 m/s is too dangerous for a bike - throws error
-        if (windSpeed.compareTo(new BigDecimal("20")) > 0)
+        if (windSpeed.compareTo(new BigDecimal("20")) > 0) {
             throw new ForbiddenVehicleException();
+        }
         // wind between 10 and 20 m/s - add 0.5€ extra fee
-        if (windSpeed.compareTo(new BigDecimal("10")) >= 0)
+        if (windSpeed.compareTo(new BigDecimal("10")) >= 0) {
             return new BigDecimal("0.5");
+        }
         // wind below 10 m/s - no extra fee
         return BigDecimal.ZERO;
     }
@@ -111,10 +119,12 @@ public class DeliveryFeeService {
      */
     private BigDecimal calculateWeatherPhenomenonExtraFee (VehicleType vehicleType, String phenomenon) {
         // applies only to scooters and bikes
-        if (phenomenon == null || phenomenon.isEmpty())
+        if (phenomenon == null || phenomenon.isEmpty()) {
             return BigDecimal.ZERO;
-        if(vehicleType == VehicleType.CAR)
+        }
+        if(vehicleType == VehicleType.CAR) {
             return BigDecimal.ZERO;
+        }
 
         // find the matching weather phenomenon from the text
         // and return the appropriate fee based on its behavior
