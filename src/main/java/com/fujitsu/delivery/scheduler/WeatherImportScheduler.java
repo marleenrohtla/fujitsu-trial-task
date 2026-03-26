@@ -10,6 +10,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDateTime;
 
@@ -57,8 +58,8 @@ public class WeatherImportScheduler {
                     //fills it with data from XML
                     obs.setStationName(name);
                     obs.setWmoCode(getValue(station, "wmocode"));
-                    obs.setAirTemperature(parseDouble(getValue(station, "airtemperature")));
-                    obs.setWindSpeed(parseDouble(getValue(station, "windspeed")));
+                    obs.setAirTemperature(parseBigDecimal(getValue(station, "airtemperature")));
+                    obs.setWindSpeed(parseBigDecimal(getValue(station, "windspeed")));
                     obs.setWeatherPhenomenon(getValue(station, "phenomenon"));
 
                     //records the current time as the timestamp
@@ -81,8 +82,8 @@ public class WeatherImportScheduler {
     }
 
     //helper method: converts a text number like "-2.1" into an actual number
-    private Double parseDouble(String value) {
-        try { return Double.parseDouble(value); }
+    private BigDecimal parseBigDecimal(String value) {
+        try { return new BigDecimal(value); }
         catch (Exception e) { return null; }
     }
 }

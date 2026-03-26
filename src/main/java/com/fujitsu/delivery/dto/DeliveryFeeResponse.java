@@ -1,12 +1,14 @@
 package com.fujitsu.delivery.dto;
 
+import java.math.BigDecimal;
+
 public class DeliveryFeeResponse {
 
-    private Double fee;
+    private BigDecimal fee;
     private String errorMessage;
 
     //constructor for successful response
-    public DeliveryFeeResponse (Double fee) {
+    public DeliveryFeeResponse (BigDecimal fee) {
         this.fee = fee;
     }
 
@@ -15,7 +17,7 @@ public class DeliveryFeeResponse {
         this.errorMessage = errorMessage;
     }
 
-    public Double getFee() {
+    public BigDecimal getFee() {
         return fee;
     }
 

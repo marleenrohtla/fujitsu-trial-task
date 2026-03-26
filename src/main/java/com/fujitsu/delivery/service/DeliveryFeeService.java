@@ -1,8 +1,12 @@
 package com.fujitsu.delivery.service;
 
 import com.fujitsu.delivery.entity.WeatherObservation;
+import com.fujitsu.delivery.enums.City;
+import com.fujitsu.delivery.enums.VehicleType;
 import com.fujitsu.delivery.exception.ForbiddenVehicleException;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 
 @Service
 public class DeliveryFeeService {
@@ -20,108 +24,96 @@ public class DeliveryFeeService {
      * @return total delivery fee in euros
      */
 
-     public double calculateFee(String city, String vehicleType) {
+     public BigDecimal calculateFee(String city, String vehicleType) {
 
-         //get the station name for the given city
-         String stationName = getStationName(city);
+         //converts string inputs to enums
+         City parsedCity = City.from(city);
+         VehicleType parsedVehicleType = VehicleType.from(vehicleType);
+
+         //get the latest station name for the given city
+         String stationName = parsedCity.getStationName();
 
          //get the latest weather data for that station
          WeatherObservation weather = weatherService.getLatestWeather(stationName);
 
          //calculates all fee components
-         double rbf = calculateRBF(city, vehicleType);
-         double atef = calculateATEF(vehicleType, weather.getAirTemperature());
-         double wsef = calculateWSEF(vehicleType, weather.getWindSpeed());
-         double wpef = calculateWPEF(vehicleType, weather.getWeatherPhenomenon());
+         BigDecimal RegionalBaseFee = calculateRegionalBaseFee(parsedCity, parsedVehicleType);
+         BigDecimal AirTemperatureExtraFee = calculateAirTemperatureExtraFee(parsedVehicleType, weather.getAirTemperature());
+         BigDecimal WindSpeedExtraFee = calculateWindSpeedExtraFee(parsedVehicleType, weather.getWindSpeed());
+         BigDecimal WeatherPhenomenonExtraFee = calculateWeatherPhenomenonExtraFee(parsedVehicleType, weather.getWeatherPhenomenon());
 
-         return rbf + atef + wsef + wpef;
+         return RegionalBaseFee.add(AirTemperatureExtraFee).add(WindSpeedExtraFee).add(WeatherPhenomenonExtraFee);
      }
-
-    /**
-     * Maps city name to weather station name
-     */
-    private String getStationName(String city) {
-        return switch (city.toLowerCase()) {
-            case "tallinn" -> "Tallinn-Harku";
-            case "tartu" -> "Tartu-Tõravere";
-            case "pärnu" -> "Pärnu";
-            default -> throw new RuntimeException("Unknow city: " + city);
-        };
-    }
 
     /**
      * Calculates Regional Base Fee based on city and vehicle type
      */
-    private double calculateRBF(String city, String vehicleType) {
-        return switch (city.toLowerCase()) {
-            case "tallinn" -> switch (vehicleType.toLowerCase()) {
-                case "car" -> 4.0;
-                case "scooter" -> 3.5;
-                case "bike" -> 3.0;
-                default -> throw new RuntimeException("Unknown vehicle type: " + vehicleType);
+    private BigDecimal calculateRegionalBaseFee(City city, VehicleType vehicleType) {
+        return switch (city) {
+            case TALLINN -> switch (vehicleType) {
+                case CAR -> new BigDecimal("4.0");
+                case SCOOTER -> new BigDecimal("3.5");
+                case BIKE -> new BigDecimal("3.0");
             };
-            case "tartu" -> switch (vehicleType.toLowerCase()) {
-                case "car" -> 3.5;
-                case "scooter" -> 3.0;
-                case "bike" -> 2.5;
-                default -> throw new RuntimeException("Unknown vehicle type: " + vehicleType);
+            case TARTU -> switch (vehicleType) {
+                case CAR -> new BigDecimal("3.5");
+                case SCOOTER -> new BigDecimal("3.0");
+                case BIKE -> new BigDecimal("2.5");
             };
-            case "pärnu" -> switch (vehicleType.toLowerCase()) {
-                case "car" -> 3.0;
-                case "scooter" -> 2.5;
-                case "bike" -> 2.0;
-                default -> throw new RuntimeException("Unknown vehicle type: " + vehicleType);
+            case PÄRNU -> switch (vehicleType) {
+                case CAR -> new BigDecimal("3.0");
+                case SCOOTER -> new BigDecimal("2.5");
+                case BIKE -> new BigDecimal("2.0");
             };
-            default -> throw new RuntimeException("Unknown city: " + city);
         };
     }
 
     /**
      * Calculates Air Temperature Extra Fee
      */
-    private double calculateATEF(String vehicleType, Double temperature) {
+    private BigDecimal calculateAirTemperatureExtraFee(VehicleType vehicleType, BigDecimal temperature) {
         //applies only to scooter and bike
         if (temperature == null)
-            return 0;
-        if (vehicleType.equalsIgnoreCase("car"))
-            return 0;
+            return BigDecimal.ZERO;
+        if (vehicleType == vehicleType.CAR)
+            return BigDecimal.ZERO;
 
-        if (temperature < -10)
-            return 1.0; //below -10 then ATEF 1€
-        if (temperature <= 0)
-            return 0.5; //between -10 and 0 then ATEF 0.5€
-        return 0; //above 0 then ATEF 0€
+        if (temperature.compareTo(new BigDecimal("-10")) < 0)
+            return new BigDecimal("1.0"); //below -10 then ATEF 1€
+        if (temperature.compareTo(BigDecimal.ZERO) <= 0)
+            return new BigDecimal("0.5"); //between -10 and 0 then ATEF 0.5€
+        return BigDecimal.ZERO; //above 0 then ATEF 0€
     }
 
     /**
      * Calculates Wind Speed Extra Fee
      */
-    private double calculateWSEF(String vehicleType, Double windSpeed) {
+    private BigDecimal calculateWindSpeedExtraFee(VehicleType vehicleType, BigDecimal windSpeed) {
         //applies only to bikes, if not a bike return 0
         if (windSpeed == null)
-            return 0;
-        if (!vehicleType.equalsIgnoreCase("bike"))
-            return 0;
+            return BigDecimal.ZERO;
+        if (vehicleType != VehicleType.BIKE)
+            return BigDecimal.ZERO;
 
         // wind stronger than 20 m/s is too dangerous for a bike - throws error
-        if (windSpeed > 20)
+        if (windSpeed.compareTo(new BigDecimal("20")) > 0)
             throw new ForbiddenVehicleException();
         // wind between 10 and 20 m/s - add 0.5€ extra fee
-        if (windSpeed >= 10)
-            return 0.5;
+        if (windSpeed.compareTo(new BigDecimal("10")) >= 0)
+            return new BigDecimal("0.5");
         // wind below 10 m/s - no extra fee
-        return 0;
+        return BigDecimal.ZERO;
     }
 
     /**
      * Calculates Weather Phenomenon Extra Fee
      */
-    private double calculateWPEF (String vehicleType, String phenomenon) {
+    private BigDecimal calculateWeatherPhenomenonExtraFee (VehicleType vehicleType, String phenomenon) {
         // applies only to scooters and bikes
         if (phenomenon == null || phenomenon.isEmpty())
-            return 0;
-        if(vehicleType.equalsIgnoreCase("car"))
-            return 0;
+            return BigDecimal.ZERO;
+        if(vehicleType == VehicleType.CAR)
+            return BigDecimal.ZERO;
 
         String p = phenomenon.toLowerCase();
 
@@ -132,13 +124,13 @@ public class DeliveryFeeService {
 
         // if weather contains snow or sleet - add 1€ extra fee
         if (p.contains("snow") || p.contains("sleet"))
-            return 1.0;
+            return new BigDecimal("1.0");
 
         // if weather contains rain - add 0.5€ extra fee
         if (p.contains("rain"))
-            return 0.5;
+            return new BigDecimal("0.5");
 
-        return 0;
+        return BigDecimal.ZERO;
     }
 
 }

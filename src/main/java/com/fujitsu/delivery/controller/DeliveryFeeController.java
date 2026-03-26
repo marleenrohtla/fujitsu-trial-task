@@ -30,7 +30,7 @@ public class DeliveryFeeController {
             @RequestParam String vehicleType) {
         try{
             //calculates the fee using the service
-            double fee = deliveryFeeService.calculateFee(city, vehicleType);
+            java.math.BigDecimal fee = deliveryFeeService.calculateFee(city, vehicleType);
 
             //returns 200 OK with the fee in the response body
             return ResponseEntity.ok(new DeliveryFeeResponse(fee));

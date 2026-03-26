@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,8 +17,8 @@ public class WeatherObservation {
 
     private String stationName;
     private String wmoCode;
-    private Double airTemperature;
-    private Double windSpeed;
+    private BigDecimal airTemperature;
+    private BigDecimal windSpeed;
     private String weatherPhenomenon;
     private LocalDateTime timestamp;
 
@@ -45,19 +46,19 @@ public class WeatherObservation {
         this.weatherPhenomenon = weatherPhenomenon;
     }
 
-    public Double getWindSpeed() {
+    public BigDecimal getWindSpeed() {
         return windSpeed;
     }
 
-    public void setWindSpeed(Double windSpeed) {
+    public void setWindSpeed(BigDecimal windSpeed) {
         this.windSpeed = windSpeed;
     }
 
-    public Double getAirTemperature() {
+    public BigDecimal getAirTemperature() {
         return airTemperature;
     }
 
-    public void setAirTemperature(Double airTemperature) {
+    public void setAirTemperature(BigDecimal airTemperature) {
         this.airTemperature = airTemperature;
     }
 
