@@ -3,6 +3,7 @@ package com.fujitsu.delivery.service;
 import com.fujitsu.delivery.entity.WeatherObservation;
 import com.fujitsu.delivery.enums.City;
 import com.fujitsu.delivery.enums.VehicleType;
+import com.fujitsu.delivery.enums.WeatherPhenomenon;
 import com.fujitsu.delivery.exception.ForbiddenVehicleException;
 import org.springframework.stereotype.Service;
 
@@ -115,22 +116,24 @@ public class DeliveryFeeService {
         if(vehicleType == VehicleType.CAR)
             return BigDecimal.ZERO;
 
-        String p = phenomenon.toLowerCase();
+        // find the matching weather phenomenon from the text
+        // and return the appropriate fee based on its behavior
+        return WeatherPhenomenon.fromText(phenomenon)
 
-        // if weather is glaze, hail or thunder - it is too dangerous for scooter or bike
-        // if any of these are true, throw an error
-        if (p.contains("glaze") || p.contains("hail") || p.contains("thunder"))
-            throw new ForbiddenVehicleException();
+               //get the behavior of the matched phenomenon (FORBIDDEN, HIGH_FEE, LOW_FEE)
+                .map(WeatherPhenomenon::getBehavior)
+                //map the behaviour to a fee amout
+                .map(behavior -> switch (behavior) {
+                    //if forbidden - throw exception, vehicle cannot be used
+                    case FORBIDDEN -> throw new ForbiddenVehicleException();
+                    //if high fee - add 1€ extra fee (snow or sleet)
+                    case HIGH_FEE -> new BigDecimal("1.0");
+                    //if low fee - add 0.5€ extra fee (rain)
+                    case LOW_FEE -> new BigDecimal("0.5");
+                })
 
-        // if weather contains snow or sleet - add 1€ extra fee
-        if (p.contains("snow") || p.contains("sleet"))
-            return new BigDecimal("1.0");
-
-        // if weather contains rain - add 0.5€ extra fee
-        if (p.contains("rain"))
-            return new BigDecimal("0.5");
-
-        return BigDecimal.ZERO;
+                //if no matching phenomenon found - no extra fee
+                .orElse(BigDecimal.ZERO);
     }
 
 }
